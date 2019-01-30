@@ -166,6 +166,7 @@ main(argv)
   process.exit(1);
 })
 .catch (e => {
+  throw 'fata-169'
 })
 
 function _assert(b, o, err_message) {
