@@ -165,8 +165,8 @@ main(argv)
   console.log(e);
   process.exit(1);
 })
-.catch (e => {
-  throw 'fata-169'
+.catch (err => {
+  throw 'fatal-169 err:'+err
 })
 
 function _assert(b, o, err_message) {
