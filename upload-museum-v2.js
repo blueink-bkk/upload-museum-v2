@@ -20,11 +20,15 @@ var pdfjsLib = require('pdfjs-dist');
 
 //const json = JSON.parse(fs.readFileSync('../postgres/pdf-store.json'))
 
+const password = process.env.PGPASSWORD;
+
+
 const conn = {
   host: 'inhelium.com',
   port: 5432,
   database: 'museum-v2',
-  user: 'postgres'
+  user: 'postgres',
+  password
 };
 
 
