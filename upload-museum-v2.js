@@ -18,35 +18,22 @@ const Massive = require('massive');
 const monitor = require('pg-monitor');
 var pdfjsLib = require('pdfjs-dist');
 
-//const json = JSON.parse(fs.readFileSync('../postgres/pdf-store.json'))
-
-const password = process.env.PGPASSWORD;
-
-
-const conn = {
-  host: 'inhelium.com',
-  port: 5432,
-  database: 'museum-v2',
-  user: 'postgres',
-  password
-};
-
-
-//const pdfUtil = require('pdf-to-text');
-//const pdf_parse = require('pdf-parse');
-//const pdf = require('./lib/every-pdf.js');
-//const pdf = require('./lib/pdf-lib.js');
-
 const argv = require('yargs')
+  .alias('p','password')
   .alias('f','file')
   .alias('d','dir')
   .alias('a','all')
   .alias('v','verbose')
 //  .alias('u','upload')
   .options({
-    'commit': {default:false},
+    'commit': {default:true},
   }).argv;
 
+const password = argv.password || process.env.PGPASSWORD;
+const host = argv.host || process.env.PGHOST || 'inhelium.com';
+const port = argv.port || process.env.PGPORT || '5432';
+const database = argv.database || process.env.PGDATABASE || 'museum-v2';
+const user = argv.user || process.env.PGUSER || 'postgres';
 
 argv.dir = argv.dir || process.env.pdfdir;
 
@@ -57,14 +44,6 @@ if (!argv.file && !argv.dir) {
   return;
 }
 
-/*
-const every_page = (page, text) => {
-  console.log('\npageIndex:',page.pageIndex)
-  console.log('=> text:',text);
-}
-*/
-
-//const every_pdf = require('./every-page.js').every_pdf;
 
 if (argv.file) {
   if (argv.dir) {
@@ -127,9 +106,14 @@ function *walkSync(dir,patterns) {
 const root_folder = argv.dir;
 let nfiles =0;
 
-
 async function main() {
-  const db = await Massive(conn);
+  const db = await Massive({
+    host,
+    port,
+    database,
+    user,
+    password
+  });
   console.log('Massive is ready.');
 
   for (const fn of walkSync(root_folder, ['\.pdf$'])) {
@@ -138,8 +122,6 @@ async function main() {
     console.log(`[${nfiles++}] npages:${doc.numPages} <${fn}> `);
     for (let pageNo=1; pageNo <=doc.numPages; pageNo++) {
       const page = await doc.getPage(pageNo);
-  //    console.warn(j)
-  //    console.log('page:',page)
       const textContent = await page.getTextContent();
       const raw_text = textContent.items
         .map(it => it.str).join(' ')
@@ -163,14 +145,14 @@ async function main() {
 };
 
 
+
+
 main(argv)
 .then((npages)=>{
   console.log('done npages:',npages);
-  console.log(e);
-  process.exit(1);
 })
 .catch (err => {
-  throw 'fatal-169 err:'+err
+  throw err
 })
 
 function _assert(b, o, err_message) {
